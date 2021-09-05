@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Static Template</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0px;
+      }
+      div {
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        margin-top: 50px;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <canvas
+        id="canvas"
+        width="1000"
+        height="600"
+        style="background-color: black;"
+      />
+    </div>
+  </body>
+  <script>
+    let raketEn = 15;
+    let raketBoy = 100;
+    let oyuncuRaketY = 250;
+    let bilgisayarRaketY = 250;
+    let oyuncuRaketX = 10;
+    let bilgisayarRaketX = 975;
+    let topX = 500;
+    let topY = 300;
+    let oyuncuPuan = 0;
+    let bilgisayarPuan = 0;
+    let yukariTusaBasildi = false;
+    let asagiTusaBasildi = false;
+    let topHizi = 5;
+    let topYatayHizi = 0;
+    let topDikeyHizi = 0;
+    let bilgisayarHiz = 2;
+    let topYaricap = 8;
+    let maksSkor = 10;
+    let oyunDurdur = true;
+    let topMinHiz = 5;
+    let topHizArtis = 0.2;
+
+    window.addEventListener("keydown", tusaBasildi);
+    window.addEventListener("keyup", tusBirakildi);
+
+    // canvas objemizi alalım
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
+
+    function tusaBasildi(event) {
+      // Oyun başlamadıysa boşluk tuşuna basılığ basılmadığını kontrol edelim
+      if (event.keyCode == 32) {
+        oyunuBaslat();
+      }
+
+      // Eğer yukarı ok tuşuna basıldıysa
+      if (event.keyCode == 38) {
+        yukariTusaBasildi = true;
+      }
+      // Eğer aşağı ok tuşuna basılırsa
+      if (event.keyCode == 40) {
+        asagiTusaBasildi = true;
+      }
+    }
+    function tusBirakildi(event) {
+      // Eğer yukarı ok tuşu bırakıldıysa
+      if (event.keyCode == 38) {
+        yukariTusaBasildi = false;
+      }
+      // Eğer aşağı ok tuşu bırakıldıysa
+      if (event.keyCode == 40) {
+        asagiTusaBasildi = false;
+      }
+    }
+
+    function EkraniCiz() {
+      // Ekranı temizle
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, 1000, 600);
+
+      // orta çizgi
+      ctx.fillStyle = "white";
+      ctx.fillRect(495, 0, 10, 600);
+
+      // Oyuncu Raketini çizelim
+      ctx.fillStyle = "white";
+      ctx.fillRect(oyuncuRaketX, oyuncuRaketY, raketEn, raketBoy);
+
+      // Bilgisayar raketini çizelim
+      ctx.fillStyle = "white";
+      ctx.fillRect(bilgisayarRaketX, bilgisayarRaketY, raketEn, raketBoy);
+
+      // topu çizelim
+      ctx.fillStyle = "white";
+      ctx.beginPath();
+      ctx.arc(topX, topY, topYaricap, 0, 2 * Math.PI);
+      ctx.closePath();
+      ctx.fill();
+
+      // skorları yazalım
+      ctx.font = "30px Arial";
+      ctx.fillText(oyuncuPuan, 430, 50);
+      ctx.fillText(bilgisayarPuan, 550, 50);
+    }
+
+    function oyunDongusu() {
+      // oyun basladimi ?
+      // eğer bailamadıbaşlamadı ise bir şey yapmadan çıksın
+      if (oyunDurdur) {
+        return;
+      }
+
+      // Oyun bitti mi?
+      if (oyuncuPuan == maksSkor || bilgisayarPuan == maksSkor) {
+        oyunuBitir();
+        return;
+      }
+
+      // Top Oyuncu Raketine Çarptı Mı?
+      if (topY >= oyuncuRaketY && topY <= oyuncuRaketY + raketBoy) {
+        if (topX - topYaricap <= 20) {
+          // oyuncu her puan aldığında top hızlansın;
+          topHizi = topHizi + topHizArtis;
+          topYatayHizi = topHizi;
+        }
+      }
+
+      // Top bilgisayar Raketine Çarptı Mı?
+      if (topY >= bilgisayarRaketY && topY <= bilgisayarRaketY + raketBoy) {
+        if (topX + topYaricap >= bilgisayarRaketX) {
+          topYatayHizi = -1 * topHizi;
+        }
+      }
+
+      // Top üst veya alt banta çarptı mı?
+      if (topY - topYaricap <= 0 || topY + topYaricap >= 600) {
+        topDikeyHizi = -1 * topDikeyHizi;
+      }
+
+      // Bilgisayarın raketini hareket ettirelim
+      // Top yukardaysa yukarı doğru hareket etsin
+      if (topYatayHizi > 0) {
+        if (bilgisayarRaketY + raketBoy / 2 > topY) {
+          bilgisayarRaketY = bilgisayarRaketY - bilgisayarHiz;
+        }
+        // Top aşağıdaysa aşağı hareket etsin
+        if (bilgisayarRaketY + raketBoy / 2 < topY) {
+          bilgisayarRaketY = bilgisayarRaketY + bilgisayarHiz;
+        }
+      }
+
+      // Bilgisayar raketi üst ve alt banta çarptı mı?
+      if (bilgisayarRaketY <= 0) {
+        bilgisayarRaketY = 0;
+      }
+      if (bilgisayarRaketY + raketBoy > 600) {
+        bilgisayarRaketY = 600 - raketBoy;
+      }
+
+      // Yukarı tuşa basıldı mı?
+      if (yukariTusaBasildi == true) {
+        oyuncuRaketY = oyuncuRaketY - 4;
+        if (oyuncuRaketY <= 0) oyuncuRaketY = 0;
+      }
+      // Aşağı tuşa basıldı mı?
+      if (asagiTusaBasildi == true) {
+        oyuncuRaketY = oyuncuRaketY + 4;
+        if (oyuncuRaketY + raketBoy >= 600) oyuncuRaketY = 600 - raketBoy;
+      }
+      // Top sol banta çarptı mı? Oyuncu topu kaçırdı mı?
+      if (topX <= 0) {
+        // Topun yeni pozisyonunu hesaplayalım
+        bilgisayarPuan = bilgisayarPuan + 1;
+        sifirla();
+      }
+      // Top sağ banta çarptı mı? Bilgisayar topu kaçırdı mı?
+      if (topX >= 1000) {
+        oyuncuPuan = oyuncuPuan + 1;
+        sifirla();
+      }
+
+      topX = topX + topYatayHizi;
+      topY = topY + topDikeyHizi;
+
+      EkraniCiz();
+    }
+
+    function sifirla() {
+      // topu masanın ortasına konumla
+      topX = 500;
+      topY = 300;
+      // Top oyun başında oyuncu tarafına doğru hareket etmeli
+      topYatayHizi = -1 * topHizi;
+      // Rastgele bir dikey hız belirleyelim
+      topDikeyHizi = Math.floor(Math.random() * (topHizi * 2)) - topHizi;
+      // eğer rastgele sayı sıfır çıkarsa dikey hız ile aynı yapalım.
+      // çünkü rastgele bulduğumuz sayı 0 çıkarsa top dümdüz rakete geliyor
+      if (topDikeyHizi == 0) {
+        topDikeyHizi = topHizi;
+      }
+    }
+
+    // Oyun bittiğinde bu fonksiyon çağrılıyor.
+    // Ekrana mesaj çıkarıyor ve boşluk tuşuna basana kadar oyun tekrar bşalmıyor
+    function oyunuBitir() {
+      // oyunu durduralım
+      oyunDurdur = true;
+
+      let mesaj = "";
+      // eğer oyuncu puanu bilgisayar puanından yüksekse kazandınız mesajı
+      if (oyuncuPuan > bilgisayarPuan) {
+        mesaj = "Oyunu Kazandınız :)";
+      } else {
+        // aksi halde kaybettin mesajı
+        mesaj = "Malesef kaybettiniz :(";
+      }
+      // mesajı yazalım
+      ctx.fillStyle = "white"; // renk beyaz olsun
+      ctx.fillRect(150, 200, 700, 200); // yazının zemininde beyaz bir dikdörtgen olsun
+      ctx.fillStyle = "black"; // siyah renkge geçelim
+      ctx.fillText(mesaj, 350, 300); // kazanan mesajını yazdıralım
+      ctx.fillText("Yeniden başlamak için boşluk tuşuna basın", 250, 340); // tuşa basın mesajını yazalım
+    }
+
+    // oyunu baslattiginda bu fonksiyonu cagiriyoruz
+    function oyunuBaslat() {
+      // puanları sıfırla
+      oyuncuPuan = 0;
+      bilgisayarPuan = 0;
+      // top hizini ilk degere cek
+      topHizi = topMinHiz;
+      // oyunu baslat
+      oyunDurdur = false;
+      sifirla();
+    }
+
+    sifirla();
+    // 10 milisaniyede bir oyun dongusu calisacak
+    setInterval(oyunDongusu, 10);
+
+    // oyun ilk çalıştırıldığında başlamasın
+    // boşluk tuşuna basana kadar başlamayacak
+    oyunDurdur = true;
+    ctx.fillStyle = "white";
+    ctx.font = "30px Arial";
+    ctx.fillText("Oyuna başlamak için boşluk tuşuna basın", 250, 330);
+  </script>
+</html>
